@@ -37,12 +37,14 @@ def human_approval(state: AgentState) -> Dict[str, Any]:
                 "subject": f"URGENT: SRE Approval Required for {inc_id}",
                 "html": f"<p><strong>Incident ID:</strong> {inc_id}</p><p><strong>Action:</strong> {action_type}</p><p><strong>Target Service:</strong> {target_service}</p><p><strong>Rationale:</strong> {rationale}</p><p>Please approve or reject this action in the Command Center.</p>"
             }
-            requests.post(
+            resp = requests.post(
                 "https://api.resend.com/emails",
                 json=email_payload,
                 headers={"Authorization": f"Bearer {resend_key}"},
                 timeout=5
             )
+            resp.raise_for_status()
+            print(f"Resend email sent successfully! Response: {resp.json()}")
         except Exception as e:
             print(f"Failed to send HITL email: {e}")
     

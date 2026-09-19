@@ -202,22 +202,33 @@ async def run_autonomous_agent(auto_remediate: bool = True, preferred_incident_i
                     # Pacing pause so UI can observe live transition
                     await asyncio.sleep(0.4)
 
-            # Mark completion
-            _active_agent_state["status"] = "COMPLETED"
-            _active_agent_state["phase"] = "completed"
-            _active_agent_state["last_updated"] = datetime.now(timezone.utc).isoformat()
+            current_state = graph.get_state(config)
+            if current_state.next:
+                # Graph is paused
+                _active_agent_state["status"] = "PAUSED"
+                _active_agent_state["phase"] = "awaiting_approval"
+                _active_agent_state["last_updated"] = datetime.now(timezone.utc).isoformat()
+                return {
+                    "status": "PAUSED",
+                    "incident_id": current_incident_id
+                }
+            else:
+                # Mark completion
+                _active_agent_state["status"] = "COMPLETED"
+                _active_agent_state["phase"] = "completed"
+                _active_agent_state["last_updated"] = datetime.now(timezone.utc).isoformat()
 
-            # Ensure incident status marked RESOLVED
-            db_inc = db.query(IncidentDB).filter(IncidentDB.id == current_incident_id).first()
-            if db_inc and db_inc.status != "RESOLVED":
-                db_inc.status = "RESOLVED"
-                db_inc.resolvedAt = datetime.now(timezone.utc).isoformat()
-                db.commit()
+                # Ensure incident status marked RESOLVED
+                db_inc = db.query(IncidentDB).filter(IncidentDB.id == current_incident_id).first()
+                if db_inc and db_inc.status != "RESOLVED":
+                    db_inc.status = "RESOLVED"
+                    db_inc.resolvedAt = datetime.now(timezone.utc).isoformat()
+                    db.commit()
 
-            return {
-                "status": "COMPLETED",
-                "incident_id": current_incident_id
-            }
+                return {
+                    "status": "COMPLETED",
+                    "incident_id": current_incident_id
+                }
 
         except Exception as e:
             _active_agent_state["status"] = "FAILED"
