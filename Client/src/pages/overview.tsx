@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Link } from 'react-router-dom'
 import { AIActivityFlow } from '@/components/AIActivityFlow'
-import { fetchIncidents, fetchAlerts, resetWholeSystem } from '@/api/client'
+import { fetchIncidents, fetchAlerts, resetWholeSystem, submitApproval } from '@/api/client'
 import type { Incident, Alert } from '@/types'
 
 const ALERT_ENGINE_URL = import.meta.env.VITE_ALERT_ENGINE_URL || 'http://localhost:8001'
@@ -14,6 +14,7 @@ export const OverviewPage: React.FC = () => {
   const [simulationStatus, setSimulationStatus] = React.useState<'IDLE' | 'RUNNING' | 'COMPLETED'>('IDLE')
   const [isEvidenceOpen, setIsEvidenceOpen] = React.useState(false)
   const [isResetting, setIsResetting] = React.useState(false)
+  const [isSubmittingApproval, setIsSubmittingApproval] = React.useState(false)
 
   // Synchronize live incidents and alerts from backend
   const refreshData = React.useCallback(async () => {
@@ -65,6 +66,13 @@ export const OverviewPage: React.FC = () => {
     } finally {
       setIsResetting(false)
     }
+  }
+
+  const handleApproval = async (status: 'APPROVED' | 'REJECTED', activeIncId: string) => {
+    setIsSubmittingApproval(true)
+    await submitApproval(activeIncId, status, `Human ${status} via Command Center`)
+    setIsSubmittingApproval(false)
+    refreshData()
   }
 
   // Active or latest incident
@@ -227,6 +235,60 @@ export const OverviewPage: React.FC = () => {
             >
               Open Storefront →
             </a>
+          </div>
+        </section>
+      )}
+
+      {/* Human Approval Required Card */}
+      {activeIncident && activeIncident.decision?.approval_status === 'PENDING' && !isResolved && (
+        <section className="space-y-4 p-6 rounded-xl border border-amber-800/80 bg-amber-950/20">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
+            <span className="font-mono text-xs uppercase tracking-widest text-amber-400">
+              Human Review Required
+            </span>
+          </div>
+          <div>
+            <h2 className="text-xl font-normal tracking-tight text-white mb-2">
+              Proposed Remediation Pending Approval
+            </h2>
+            <div className="bg-zinc-950 border border-zinc-800 p-4 rounded-lg space-y-3 mb-4">
+              <div className="flex justify-between items-start">
+                <span className="text-sm font-medium text-zinc-300">Action:</span>
+                <span className="text-sm text-zinc-100 font-mono bg-zinc-900 px-2 py-1 rounded">
+                  {activeIncident.decision.proposed_remediation?.action_type || 'Unknown'}
+                </span>
+              </div>
+              <div className="flex justify-between items-start">
+                <span className="text-sm font-medium text-zinc-300">Target Service:</span>
+                <span className="text-sm text-zinc-100">
+                  {activeIncident.decision.proposed_remediation?.target_service || 'Unknown'}
+                </span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-sm font-medium text-zinc-300">Rationale:</span>
+                <span className="text-sm text-zinc-400">
+                  {activeIncident.decision.proposed_remediation?.rationale || 'No rationale provided'}
+                </span>
+              </div>
+            </div>
+            
+            <div className="flex gap-4 mt-4">
+              <button
+                onClick={() => handleApproval('APPROVED', activeIncident.id)}
+                disabled={isSubmittingApproval}
+                className="px-6 py-2 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmittingApproval ? 'Submitting...' : 'Approve Action'}
+              </button>
+              <button
+                onClick={() => handleApproval('REJECTED', activeIncident.id)}
+                disabled={isSubmittingApproval}
+                className="px-6 py-2 rounded-lg bg-zinc-800 text-zinc-200 border border-zinc-700 hover:bg-zinc-700 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Reject Action
+              </button>
+            </div>
           </div>
         </section>
       )}

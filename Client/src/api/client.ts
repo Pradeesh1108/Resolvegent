@@ -205,3 +205,27 @@ export async function resetWholeSystem(): Promise<boolean> {
     return false
   }
 }
+
+export async function submitApproval(
+  incidentId: string,
+  approvalStatus: 'APPROVED' | 'REJECTED',
+  comments: string = ''
+): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/incidents/${incidentId}/approve`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        approvalStatus,
+        approver: 'pradeeshsivaprakasam@gmail.com',
+        comments
+      })
+    })
+    return res.ok
+  } catch (err) {
+    console.error('Failed to submit approval:', err)
+    return false
+  }
+}

@@ -86,6 +86,12 @@ export interface Decision {
   alternativeActions: Action[]
   riskAssessment: 'LOW' | 'MEDIUM' | 'HIGH'
   timestamp: string
+  approval_status?: string
+  proposed_remediation?: {
+    action_type: string
+    target_service: string
+    rationale: string
+  }
 }
 
 export interface ApprovalRequest {

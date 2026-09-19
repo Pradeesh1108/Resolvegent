@@ -1,4 +1,5 @@
 from typing import Dict, Any
+import os
 from datetime import datetime, timezone
 from langgraph.types import interrupt
 from langchain_core.documents import Document
@@ -25,6 +26,25 @@ def human_approval(state: AgentState) -> Dict[str, Any]:
         "rationale": rationale,
         "message": f"HIGH RISK ACTION REQUIRES SRE APPROVAL: {action_type} on {target_service}"
     }
+    
+    resend_key = os.environ.get("RESEND_API_KEY")
+    if resend_key:
+        try:
+            import requests
+            email_payload = {
+                "from": "onboarding@resend.dev",
+                "to": ["pradeeshsivaprakasam@gmail.com"],
+                "subject": f"URGENT: SRE Approval Required for {inc_id}",
+                "html": f"<p><strong>Incident ID:</strong> {inc_id}</p><p><strong>Action:</strong> {action_type}</p><p><strong>Target Service:</strong> {target_service}</p><p><strong>Rationale:</strong> {rationale}</p><p>Please approve or reject this action in the Command Center.</p>"
+            }
+            requests.post(
+                "https://api.resend.com/emails",
+                json=email_payload,
+                headers={"Authorization": f"Bearer {resend_key}"},
+                timeout=5
+            )
+        except Exception as e:
+            print(f"Failed to send HITL email: {e}")
     
     human_response = interrupt(interrupt_payload)
     
