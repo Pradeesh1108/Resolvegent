@@ -1,7 +1,7 @@
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 
-load_dotenv()
+load_dotenv(find_dotenv())
 
 class Config:
     GROQ_API_KEY = os.getenv("GROQ_API_KEY") or os.getenv("groq_api") or os.getenv("GROQ_API") or ""

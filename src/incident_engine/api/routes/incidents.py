@@ -50,7 +50,7 @@ class ApproveRequest(BaseModel):
     comments: str = ""
 
 @router.post("/incidents/{id}/approve")
-async def approve_incident(id: str, request: ApproveRequest):
+async def approve_incident(id: str, request: ApproveRequest, db: Session = Depends(get_db)):
     # Using incident id directly as the thread_id for LangGraph MemorySaver
     config = {"configurable": {"thread_id": id}}
     
@@ -59,6 +59,13 @@ async def approve_incident(id: str, request: ApproveRequest):
         raise HTTPException(status_code=400, detail="Graph is not awaiting approval.")
         
     graph.update_state(config, {"approved": request.approvalStatus == "APPROVED", "reviewer": request.approver, "note": request.comments}, as_node="human_approval")
+    
+    incident = db.query(IncidentDB).filter(IncidentDB.id == id).first()
+    if incident and incident.decision:
+        new_dec = dict(incident.decision)
+        new_dec["approval_status"] = request.approvalStatus
+        incident.decision = new_dec
+        db.commit()
     
     return {
         "resumed": True,

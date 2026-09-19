@@ -153,7 +153,11 @@ async def run_autonomous_agent(auto_remediate: bool = True, preferred_incident_i
                             rem = state_update.get("proposed_remediation")
                             if not isinstance(rem, dict) and hasattr(rem, "model_dump"):
                                 rem = rem.model_dump()
-                            db_inc.decision = rem
+                            db_inc.decision = {
+                                "approval_status": state_update.get("approval_status", "PENDING"),
+                                "proposed_remediation": rem,
+                                "riskAssessment": state_update.get("risk_level", "HIGH")
+                            }
                             db.commit()
 
                     # Handle verification & closure
