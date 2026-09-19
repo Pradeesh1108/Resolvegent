@@ -79,7 +79,7 @@ export const OverviewPage: React.FC = () => {
   const activeIncident: Incident | undefined =
     incidents.find((inc) => inc.status !== 'RESOLVED') || incidents[0]
 
-  const isResolved = activeIncident?.status === 'RESOLVED' || simulationStatus === 'COMPLETED'
+  const isResolved = activeIncident?.status === 'RESOLVED'
   const isCritical = activeIncident?.severity === 'CRITICAL'
 
   // Incident status badge

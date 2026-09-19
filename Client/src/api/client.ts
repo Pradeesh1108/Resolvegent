@@ -4,7 +4,7 @@ const RAW_API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 export const API_BASE = RAW_API_BASE.endsWith('/') ? RAW_API_BASE.slice(0, -1) : RAW_API_BASE
 
 export interface AgentStatusResponse {
-  status: 'IDLE' | 'RUNNING' | 'COMPLETED' | 'FAILED'
+  status: 'IDLE' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'PAUSED'
   phase: string
   current_incident_id?: string
   current_incident_title?: string

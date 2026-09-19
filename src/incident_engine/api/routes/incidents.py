@@ -49,8 +49,11 @@ class ApproveRequest(BaseModel):
     approver: str = "sre-lead@company.com"
     comments: str = ""
 
+from incident_engine.core.agent_runner import run_autonomous_agent
+from fastapi import BackgroundTasks
+
 @router.post("/incidents/{id}/approve")
-async def approve_incident(id: str, request: ApproveRequest, db: Session = Depends(get_db)):
+async def approve_incident(id: str, request: ApproveRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     # Using incident id directly as the thread_id for LangGraph MemorySaver
     config = {"configurable": {"thread_id": id}}
     
@@ -67,6 +70,10 @@ async def approve_incident(id: str, request: ApproveRequest, db: Session = Depen
         incident.decision = new_dec
         db.commit()
     
+    
+    # Resume the agent to finish the remediation
+    background_tasks.add_task(run_autonomous_agent, True, id)
+
     return {
         "resumed": True,
         "incidentId": id,

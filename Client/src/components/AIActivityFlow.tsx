@@ -49,9 +49,9 @@ export const AIActivityFlow: React.FC<AIActivityFlowProps> = ({
         else if (p.includes('verify') || p.includes('complet')) phaseIdx = 4
 
         const mappedStatus: 'IDLE' | 'RUNNING' | 'COMPLETED' =
-          statusRes.status === 'RUNNING'
+          (statusRes.status === 'RUNNING' || statusRes.status === 'PAUSED')
             ? 'RUNNING'
-            : statusRes.status === 'COMPLETED' || auditRes.length > 0
+            : (statusRes.status === 'COMPLETED' || auditRes.length > 0)
             ? 'COMPLETED'
             : 'IDLE'
 
