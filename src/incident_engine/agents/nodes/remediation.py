@@ -33,7 +33,7 @@ def human_approval(state: AgentState) -> Dict[str, Any]:
             import requests
             email_payload = {
                 "from": "onboarding@resend.dev",
-                "to": ["pradeeshsivaprakasam@gmail.com"],
+                "to": ["pradeeshkgm@gmail.com"],
                 "subject": f"URGENT: SRE Approval Required for {inc_id}",
                 "html": f"<p><strong>Incident ID:</strong> {inc_id}</p><p><strong>Action:</strong> {action_type}</p><p><strong>Target Service:</strong> {target_service}</p><p><strong>Rationale:</strong> {rationale}</p><p>Please approve or reject this action in the Command Center.</p>"
             }
