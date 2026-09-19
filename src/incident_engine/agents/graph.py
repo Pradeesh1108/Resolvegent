@@ -17,12 +17,12 @@ def route_investigation(state: AgentState) -> str:
     return "decide_root_cause"
 
 def route_remediation_policy(state: AgentState) -> str:
-    """Enforces policy: Safe actions or auto_remediate execute autonomously; high-risk actions require human approval."""
-    if state.get("auto_remediate", False):
-        return "execute_remediation"
+    """Enforces policy: High-risk actions require human approval, regardless of auto_remediate flag."""
     if state.get("approval_required", True):
         return "human_approval"
-    return "execute_remediation"
+    if state.get("auto_remediate", False):
+        return "execute_remediation"
+    return "human_approval"
 
 def route_approval(state: AgentState) -> str:
     """Routes based on human reviewer sign-off."""
